@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         id="manifestBuilder"
+         name="%extension.name"
+         point="org.eclipse.core.resources.builders">
+      <builder
+            hasNature="true">
+         <run
+               class="org.github.pde2virgo.Builder">
+         </run>
+      </builder>
+   </extension>
+   <extension
+         id="PDE2VirgoNature"
+         name="%extension.name.0"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="org.github.pde2virgo.Nature">
+         </run>
+      </runtime>
+      <builder
+            id="org.github.pde2virgo.manifestBuilder">
+      </builder>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            objectClass="org.eclipse.core.resources.IProject"
+            nameFilter="*"
+            id="org.github.pde2virgo.objectContribution1">
+         <action
+               label="%action.label"
+               class="org.github.pde2virgo.ToggleNatureAction"
+               menubarPath="additions"
+               enablesFor="+"
+               id="org.github.pde2virgo.ToggleNatureAction">
+         </action>
+      </objectContribution>
+   </extension>
+
+</plugin>
