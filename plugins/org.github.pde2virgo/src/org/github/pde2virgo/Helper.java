@@ -66,7 +66,7 @@ public class Helper {
     }
 
     /**
-     * tells wether the META-INF folder exists in the output location or not
+     * tells whether a META-INF folder exists in the output location that contains a MANIFEST.MF file
      * @param outputLocation
      * @return
      * @throws CoreException
@@ -87,19 +87,26 @@ public class Helper {
             binFolder.refreshLocal(IResource.DEPTH_ONE, null);
         }
         IFolder binaryMetaInf = binFolder.getFolder(META_INF);
-        if (binaryMetaInf.exists()) {
+        if (!binaryMetaInf.exists()) {
+            if (DEBUG) {
+                debug("Creating bin/META-INF"); //$NON-NLS-1$
+            }
+            binaryMetaInf.create(true, true, null);
+            return false;
+        } else {
             if (DEBUG) {
                 debug("bin/META-INF already exists, refreshing"); //$NON-NLS-1$
             }
             binaryMetaInf.refreshLocal(IResource.DEPTH_INFINITE, null);
-            return true;
-        } else {
+        }
+        IFile binaryManifest = binaryMetaInf.getFile(MANIFEST_MF);
+        if (!binaryManifest.exists()) {
             if (DEBUG) {
-                debug("bin/META-INF created"); //$NON-NLS-1$
+                debug("bin/META-INF/MANIFEST.MF does not exist"); //$NON-NLS-1$
             }
-            binaryMetaInf.create(true, true, null);
             return false;
         }
+        return true;
     }
 
     /* package */ static java.util.List<String> getLibraryEntries(IProject project) throws CoreException {
