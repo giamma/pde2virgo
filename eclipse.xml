@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================================== 
+     May 13, 2013 10:53:54 AM                                                        
+
+     eclipse    
+     Download, setup and install an eclipse to launch application
+                   
+     builder                                                                
+     ====================================================================== -->
+<project name="eclipse" default="noDefault">
+	<description>
+		Download, setup and install an eclipse to launch application
+    </description>
+
+	<property name="local.tmp" location="tmp" />
+	<property name="eclipse.home" location="eclipse" />
+	<property name="eclipse.version" value="4.2.0" />
+	<property name="eclipse.release" value="4.2.2" />
+
+	<!-- ================================= 
+          target: mirror              
+         ================================= -->
+    <target name="mirror" depends="install,setup" description="Publish a P2 repository to other P2 repository">
+		<fail message="Missing destination folder for P2 repository" unless="p2.destination" />
+		<fail message="Missing source folder" unless="p2.source" />
+
+    	<makeurl property="p2.source.url" file="${p2.source}" />
+    	<makeurl property="p2.destination.url" file="${p2.destination}" />
+
+    	<java jar="${launcher}" fork="true" failonerror="true">
+			<arg value="-nosplash" />
+			<arg value="-application" />
+			<arg value="org.eclipse.equinox.p2.artifact.repository.mirrorApplication" />
+			<arg value="-source" />
+			<arg value="${p2.source.url}" />
+			<arg value="-destination" />
+			<arg value="${p2.destination.url}" />
+		</java>
+    	<java jar="${launcher}" fork="true" failonerror="true">
+			<arg value="-nosplash" />
+			<arg value="-application" />
+			<arg value="org.eclipse.equinox.p2.metadata.repository.mirrorApplication" />
+			<arg value="-source" />
+			<arg value="${p2.source.url}" />
+			<arg value="-destination" />
+			<arg value="${p2.destination.url}" />
+		</java>
+    </target>
+
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: setup
+         - - - - - - - - - - - - - - - - - -->
+    <target name="setup">
+		<pathconvert property="launcher">
+			<fileset dir="${eclipse.home}/plugins/">
+				<include name="org.eclipse.equinox.launcher_*.jar" />
+			</fileset>
+		</pathconvert>
+    </target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: install
+         - - - - - - - - - - - - - - - - - -->
+    <target name="install" depends="initialise,clean,checkSkipInstall" unless="skipInstall">
+    	<antcall target="download" />
+		<antcall target="extract" />
+    </target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: checkSkipInstall
+         - - - - - - - - - - - - - - - - - -->
+	<target name="checkSkipInstall">
+		<!-- check if eclipse is installed and has right version -->
+		<property file="${eclipse.home}/.eclipseproduct" prefix="ec" />
+		<condition property="skipInstall">
+			<and>
+				<available file="${eclipse.home}" type="dir" />
+				<equals arg1="${eclipse.version}" arg2="${ec.version}" />
+			</and>
+		</condition>
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: initialise
+         - - - - - - - - - - - - - - - - - -->
+    <target name="initialise">
+		<condition property="eclipse.os" value="linux">
+			<os family="unix" />
+		</condition>
+		<condition property="eclipse.os" value="win32">
+			<os family="windows" />
+		</condition>
+		<condition property="eclipse.ws" value="gtk">
+			<os family="unix" />
+		</condition>
+		<condition property="eclipse.ws" value="win32">
+			<os family="windows" />
+		</condition>
+		<condition property="eclipse.ext" value="tar.gz">
+			<os family="unix" />
+		</condition>
+		<condition property="eclipse.ext" value="zip">
+			<os family="windows" />
+		</condition>
+		<condition property="eclipse.arch" value="x86_64">
+			<or>
+				<os arch="amd64" />
+				<os arch="i386" />
+			</or>
+		</condition>
+		<condition property="eclipse.arch" value="x86">
+			<os arch="x86" />
+		</condition>
+
+		<property name="eclipse.tmpdir" location="${local.tmp}/eclipse" />
+		<property name="eclipse.archive" value="eclipse-platform-4.2.2-${eclipse.os}-${eclipse.ws}-${eclipse.arch}.${eclipse.ext}" />
+    </target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: donwload
+         - - - - - - - - - - - - - - - - - -->
+	<target name="download">
+		<mkdir dir="${eclipse.tmpdir}"/>
+		<get src="http://www.mirrorservice.org/sites/download.eclipse.org/eclipseMirror/eclipse/downloads/drops4/R-4.2.2-201302041200/eclipse-platform-4.2.2-${eclipse.os}-${eclipse.ws}-${eclipse.arch}.${eclipse.ext}" dest="${eclipse.tmpdir}/${eclipse.archive}"/>
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+	  target: extract
+	 - - - - - - - - - - - - - - - - - -->
+    <target name="extract" description="Expand donwloaded archive">
+    	<delete dir="${eclipse.home}" quiet="true" includeemptydirs="true">
+			<exclude name="dropins/**/*" />
+    	</delete>
+
+		<condition property="extractTarget" value="expandTar" else="expandZip">
+			<matches pattern="tar\.gz$" string="${eclipse.archive}" />
+		</condition>
+		<antcall target="${extractTarget}">
+			<param name="archive" value="${eclipse.tmpdir}/${eclipse.archive}" />
+		</antcall>
+    </target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: expandZip
+         - - - - - - - - - - - - - - - - - -->
+	<target name="expandZip">
+		<unzip src="${archive}" dest="${eclipse.home}">
+			<globmapper from="eclipse/*" to="*"/>
+		</unzip>
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: expandTar
+         - - - - - - - - - - - - - - - - - -->
+	<target name="expandTar">
+		<basename property="tarName" file="${archive}" suffix="gz" />
+		<dirname property="tarPath" file="${archive}" />
+		<property name="tarFile" value="${tarPath}/${tarName}" />
+
+		<gunzip src="${archive}" dest="${tarFile}" />
+		<untar src="${tarFile}" dest="${eclipse.home}">
+			<globmapper from="eclipse/*" to="*"/>
+		</untar>
+		<delete file="${tarFile}" />
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: clean
+         - - - - - - - - - - - - - - - - - -->
+	<target name="clean">
+		<delete dir="${eclipse.tmpdir}" quiet="true" includeemptydirs="true" />
+	</target>
+
+	<!-- ===================================================================== -->
+	<!-- Default target                                                        -->
+	<!-- ===================================================================== -->
+	<target name="noDefault">
+		<echo message="You must specify a target when invoking this file" />
+	</target>
+
+</project>
