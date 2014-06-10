@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <description name="PDE2Virgo">
+      Bridge Virgo Tools with Eclipse Plug-in Development Environment (PDE)
+   </description>
+   <feature url="features/org.github.pde2virgo.feature_1.0.0.qualifier.jar" id="org.github.pde2virgo.feature" version="1.0.0.qualifier">
+      <category name="PDE2Virgo"/>
+   </feature>
+   <category-def name="PDE2Virgo" label="PDE2Virgo">
+      <description>
+         Bridge Virgo Tools with Eclipse Plug-in Development Environment (PDE)
+      </description>
+   </category-def>
+</site>
